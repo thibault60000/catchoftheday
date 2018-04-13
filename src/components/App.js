@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from 'prop-types';
 import Header from "../components/Header";
 import Order from "../components/Order";
 import Inventory from "../components/Inventory";
@@ -7,10 +8,16 @@ import Fish from "./Fish";
 import base from "../base";
 
 class App extends React.Component {
+
   state = {
     fishes: {},
     order: {}
   };
+
+  static propTypes = {
+    match: PropTypes.object
+  }
+
   componentDidMount() {
     const { params } = this.props.match;
     // first reinstate our localstore
