@@ -16,14 +16,25 @@ class Inventory extends Component {
   };
 
   state = {
-    uid: null,
+    uid: "test",
     owner: null
+  };
+  
+
+  componentDidMount() {
+    firebase.auth().onAuthStateChanged(user => {
+      if(user) {
+        this.authHandler({ user });
+      }    
+    });
   }
 
   authHandler = async authData => {
+  
     // 1. Look up the current store in the firebase database
     const store = await base.fetch(this.props.storeId, { context: this });
     // 2. Claim it if there is no owner
+
     if (!store.owner) {
       // save it as our own
       await base.post(`${this.props.storeId}/owner`, {
@@ -31,12 +42,15 @@ class Inventory extends Component {
       });
     }
     // 3. Set the state of the inventory component ro reflect the current user
-    this.setState= ({
+
+    this.setState({
       uid: authData.user.uid,
       owner: store.owner || authData.user.uid
     });
+  
   };
   authenticate = provider => {
+
     const authProvider = new firebase.auth[`${provider}AuthProvider`]();
     firebaseApp
       .auth()
@@ -44,23 +58,38 @@ class Inventory extends Component {
       .then(this.authHandler);
   };
 
+  logout = async () => {
+    await firebase.auth().signOut();
+    this.setState({
+      uid: null
+    });
+  }
+   
+
   render() {
+    
+    const logout = <button onClick={this.logout}> Se déconnecter </button>;
+
     // 1. check if they are logged in
     if (!this.state.uid ){
       return <Login authenticate={this.authenticate} />;
-    }
+    } 
 
     // 2. Check if they are not the owner of the store
     if (this.state.uid !== this.state.owner){
-      return (<div>
-        <p>Désolé vous n'êtes pas le propriétaire</p>
-      </div> );
+      return (
+        <div>
+          <p>Désolé vous n'êtes pas le propriétaire</p>
+          {logout}
+        </div>
+      );
     }
 
-    // 3. They must be the owner , just render
+    // 3. They must be the owner , just render the inventory
     return (
       <div className="inventory">
         <h2>Inventaire</h2>
+        {logout}
         {Object.keys(this.props.fishes).map(key => (
           <EditFishForm
             key={key}
